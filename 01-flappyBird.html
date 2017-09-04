@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <meta charset='UTF-8'>
+  <title>Document</title>
+  <script src="./js/Sky.js"></script>
+  <script src="./js/Land.js"></script>
+  <script src="./js/Pipe.js"></script>
+  <script src="./js/Bird.js"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #canvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='800' height='600'></canvas>
+</body>
+<script>
+  var canvas = document.getElementById('canvas');
+  var context = canvas.getContext('2d');
+
+  var skyImage = new Image();
+  var landImage = new Image();
+  var pipe1Image = new Image();
+  var pipe2Image = new Image();
+  var birdImage = new Image();
+
+
+  skyImage.src = './img/sky.png';
+  landImage.src = './img/land.png';
+  pipe1Image.src = './img/pipe1.png';
+  pipe2Image.src = './img/pipe2.png';
+  birdImage.src = './img/birds.png';
+
+  var imagesArr = [skyImage, landImage, pipe1Image, pipe2Image, birdImage];
+  var count = 0;
+  imagesArr.forEach(function (img) {
+    img.onload = function () {
+      count++;
+      if (count == imagesArr.length) {
+        var rolesArr = [];
+        function createRoles() {
+          for (var i = 0; i < 2; i++) {
+            var info = {
+              image: skyImage,
+              canvas: canvas,
+              context: context,
+              x: i * skyImage.width
+            }
+            var sky = new Sky(info);
+            rolesArr.push(sky);
+          }
+          for (var i = 0; i < 4; i++) {
+            var info = {
+              image: landImage,
+              canvas: canvas,
+              context: context,
+              x: i * landImage.width
+            }
+            var land = new Land(info);
+            rolesArr[rolesArr.length] = land;
+          }
+
+          var gap = (canvas.width - pipe2Image.width * 6) / 5;
+          for (var i = 0; i < 6; i++) {
+            var info = {
+              topImage: pipe2Image,
+              bottomImage: pipe1Image,
+              landHeight: landImage.height,
+              canvas: canvas,
+              context: context,
+              x: 300 + (pipe2Image.width + gap) * i,
+              gap: gap
+            }
+            var pipe = new Pipe(info);
+            rolesArr.push(pipe);
+          }
+          var info = {
+            image: birdImage,
+            x: 150,
+            y: 150,
+            canvas: canvas,
+            context: context
+          }
+          var bird = new Bird(info);
+          rolesArr.push(bird);
+
+        }
+        createRoles();
+        // console.log(rolesArr);
+        var startTime = new Date();
+        function action() {
+          //这里可以不需要清空画布是因为整个画布都被第一个天空的图片覆盖了，相当于刷新了
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.beginPath();
+          var now = new Date();
+          var s = Math.floor((now - startTime) / 1000);
+          var h = Math.floor(s / 3600);
+          var m = Math.floor(s % 3600 / 60);
+          s = Math.floor(s % 60);
+
+          rolesArr.forEach(function (role) {
+            role.draw();
+          });
+
+          var text = '您一共坚持了' + h + '时' + m + '分' + s + '秒';
+          context.textAlign = 'right';
+          context.textBaseline = 'top';
+          context.font = 'bold 30px sans-serif';
+          context.fillStyle = 'red';
+          context.fillText(text, canvas.width, 0);
+
+          var birdRole = rolesArr[rolesArr.length - 1];
+          if (birdRole.y >= canvas.height - landImage.height || context.isPointInPath(birdRole.x, birdRole.y)) {
+            return;
+          }
+
+          window.requestAnimationFrame(action);
+        }
+        action();
+
+      }
+    }
+  })
+
+</script>
+
+</html>
